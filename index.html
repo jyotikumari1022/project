@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemical Supplies Table</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    .table-toolbar {
+      font-size: 1.5rem;
+    }
+    .table-toolbar i {
+      cursor: pointer;
+      margin-right: 15px;
+    }
+    .table-toolbar i:hover {
+      color: #007bff;
+    }
+    .table-active {
+      background-color: #d9edf7;
+    }
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    th.sortable {
+      cursor: pointer;
+    }
+    th.sortable:hover {
+      color: #007bff;
+    }
+    th.sortable i {
+      margin-left: 5px;
+    }
+    td[contenteditable="true"] {
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    
+    
+    <div class="header-container">
+      <h2>Chemical Supplies</h2>
+      
+      <!-- Toolbar -->
+      <div class="table-toolbar">
+        <i class="fas fa-plus-circle" title="Add Row" onclick="addRow()"></i>
+        <i class="fas fa-arrow-up" title="Move Up" onclick="moveRowUp()"></i>
+        <i class="fas fa-arrow-down" title="Move Down" onclick="moveRowDown()"></i>
+        <i class="fas fa-trash-alt" title="Delete Row" onclick="deleteRow()"></i>
+        <i class="fas fa-sync-alt" title="Refresh" onclick="refreshTable()"></i>
+        <i class="fas fa-save" title="Save" onclick="saveTable()"></i>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <table class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th class="sortable" onclick="sortTable(0)"> <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(1)">Chemical Name <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(2)">Vendor <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(3)">Density (g/m³) <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(4)">Viscosity (m²/s) <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(5)">Packaging <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(6)">Pack Size <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(7)">Unit <i class="fas fa-sort"></i></th>
+          <th class="sortable" onclick="sortTable(8)">Quantity <i class="fas fa-sort"></i></th>
+        </tr>
+      </thead>
+      <tbody id="chemicalTable">
+        <!-- Table rows will be dynamically populated using JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let selectedRow = null;
+    let sortDirection = 1;  
+
+    // JSON array with chemical data
+    const chemicalData = [
+      { "id": 1, "chemical_name": "Ammonium Persulfate", "vendor": "LG Chem", "density": 3525.92, "viscosity": 60.63, "packaging": "Bag", "pack_size": 100.00, "unit": "kg", "quantity": 6495.18 },
+      { "id": 2, "chemical_name": "Caustic Potash", "vendor": "Formosa", "density": 3172.15, "viscosity": 48.22, "packaging": "Bag", "pack_size": 100.00, "unit": "kg", "quantity": 8751.90 },
+      { "id": 3, "chemical_name": "Dimethylaminopropylamino", "vendor": "LG Chem", "density": 8435.37, "viscosity": 12.62, "packaging": "Barrel", "pack_size": 75.00, "unit": "L", "quantity": 5964.61 },
+      { "id": 4, "chemical_name": "Mono Ammonium Phosphate", "vendor": "Sinopec", "density": 1597.65, "viscosity": 76.51, "packaging": "Bag", "pack_size": 105.00, "unit": "kg", "quantity": 8183.73 },
+      { "id": 5, "chemical_name": "Ferric Nitrate", "vendor": "DowDuPont", "density": 364.04, "viscosity": 14.90, "packaging": "Bag", "pack_size": 105.00, "unit": "kg", "quantity": 4154.33 },
+      { "id": 6, "chemical_name": "n-Pentane", "vendor": "Sinopec", "density": 4535.26, "viscosity": 66.76, "packaging": "N/A", "pack_size": "N/A", "unit": "t", "quantity": 6272.34 },
+      { "id": 7, "chemical_name": "Glycol Ether PM", "vendor": "LG Chem", "density": 6495.18, "viscosity": 72.12, "packaging": "Bag", "pack_size": 250.00, "unit": "kg", "quantity": 8749.54 },
+      { "id": 8, "chemical_name": "Sodium Hydroxide", "vendor": "BASF", "density": 2200.00, "viscosity": 55.30, "packaging": "Bag", "pack_size": 50.00, "unit": "kg", "quantity": 5450.50 },
+      { "id": 9, "chemical_name": "Sulfuric Acid", "vendor": "DowDuPont", "density": 1800.00, "viscosity": 23.40, "packaging": "Drum", "pack_size": 200.00, "unit": "L", "quantity": 4321.78 },
+      { "id": 10, "chemical_name": "Acetic Acid", "vendor": "Formosa", "density": 1240.25, "viscosity": 25.30, "packaging": "Barrel", "pack_size": 75.00, "unit": "L", "quantity": 3589.11 },
+      { "id": 11, "chemical_name": "Hydrogen Peroxide", "vendor": "LG Chem", "density": 1110.10, "viscosity": 34.70, "packaging": "Bottle", "pack_size": 20.00, "unit": "L", "quantity": 2450.00 },
+      { "id": 12, "chemical_name": "Ethanol", "vendor": "Sinopec", "density": 790.00, "viscosity": 22.10, "packaging": "Drum", "pack_size": 200.00, "unit": "L", "quantity": 7500.25 },
+      { "id": 13, "chemical_name": "Methanol", "vendor": "Formosa", "density": 785.00, "viscosity": 18.50, "packaging": "Drum", "pack_size": 180.00, "unit": "L", "quantity": 8250.33 },
+      { "id": 14, "chemical_name": "Sodium Chloride", "vendor": "BASF", "density": 2160.80, "viscosity": 45.22, "packaging": "Bag", "pack_size": 100.00, "unit": "kg", "quantity": 3250.56 }
+    ];
+
+    // Load JSON data into the table
+    function loadTable() {
+      const tableBody = document.getElementById('chemicalTable');
+      tableBody.innerHTML = '';  
+
+      chemicalData.forEach((chemical) => {
+        const row = document.createElement('tr');
+        row.setAttribute('onclick', 'selectRow(this)');
+
+        row.innerHTML = `
+          <td>${chemical.id}</td>
+          <td contenteditable="true">${chemical.chemical_name}</td>
+          <td contenteditable="true">${chemical.vendor}</td>
+          <td contenteditable="true">${chemical.density}</td>
+          <td contenteditable="true">${chemical.viscosity}</td>
+          <td contenteditable="true">${chemical.packaging}</td>
+          <td contenteditable="true">${chemical.pack_size}</td>
+          <td contenteditable="true">${chemical.unit}</td>
+          <td contenteditable="true">${chemical.quantity}</td>
+        `;
+
+        
+        Array.from(row.cells).forEach(cell => {
+          if (cell.isContentEditable) {
+            cell.addEventListener('keydown', function (e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();  
+                cell.blur();  
+                saveChanges(row, cell);  
+              }
+            });
+          }
+        });
+
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Save changes function
+    function saveChanges(row, cell) {
+      alert(`Changes saved for Row ID ${row.cells[0].innerText}. Updated value: ${cell.innerText}`);
+    }
+
+    // Sort table function
+    function sortTable(columnIndex) {
+      const table = document.getElementById("chemicalTable");
+      const rows = Array.from(table.rows);
+      const header = document.querySelectorAll("th.sortable");
+
+      rows.sort((a, b) => {
+        const aText = a.cells[columnIndex].innerText;
+        const bText = b.cells[columnIndex].innerText;
+
+        const aValue = isNaN(aText) ? aText : parseFloat(aText);
+        const bValue = isNaN(bText) ? bText : parseFloat(bText);
+
+        if (aValue < bValue) return -sortDirection;
+        if (aValue > bValue) return sortDirection;
+        return 0;
+      });
+
+      sortDirection = -sortDirection;
+
+      rows.forEach(row => table.appendChild(row));
+    }
+
+    // Select row function
+    function selectRow(row) {
+      if (selectedRow) selectedRow.classList.remove('table-active');
+      selectedRow = row;
+      selectedRow.classList.add('table-active');
+    }
+   
+     // Add row function
+     function addRow() {
+      const table = document.getElementById("chemicalTable");
+      const rowCount = table.rows.length;
+      const newRow = table.insertRow();
+      newRow.setAttribute('onclick', 'selectRow(this)');
+      newRow.innerHTML = `<td>${rowCount + 1}</td><td contenteditable="true">New Chemical</td><td contenteditable="true">Vendor</td><td contenteditable="true">0.00</td><td contenteditable="true">0.00</td><td contenteditable="true">Bag</td><td contenteditable="true">0.00</td><td contenteditable="true">kg</td><td contenteditable="true">0.00</td>`;
+    }
+
+    // Move selected row up
+    function moveRowUp() {
+      if (!selectedRow) return;
+      const previousRow = selectedRow.previousElementSibling;
+      if (previousRow) {
+        selectedRow.parentNode.insertBefore(selectedRow, previousRow);
+        reindexRows();
+      }
+    }
+
+    // Move selected row down
+    function moveRowDown() {
+      if (!selectedRow) return;
+      const nextRow = selectedRow.nextElementSibling;
+      if (nextRow) {
+        selectedRow.parentNode.insertBefore(nextRow, selectedRow);
+        reindexRows();
+      }
+    }
+
+    // Delete selected row
+    function deleteRow() {
+      if (selectedRow) {
+        selectedRow.remove();
+        selectedRow = null;
+        reindexRows();
+      }
+    }
+
+    // Re-index row IDs after sorting, adding, or deleting rows
+    function reindexRows() {
+      const table = document.getElementById('chemicalTable');
+      Array.from(table.rows).forEach((row, index) => {
+        row.cells[0].innerText = index + 1;
+      });
+    }
+
+    // Refresh table (reload data)
+    function refreshTable() {
+      loadTable();
+    }
+
+    // Save table (placeholder function)
+    function saveTable() {
+      alert('Table data saved!');
+    }
+
+    
+    window.onload = loadTable;
+  </script>
+</body>
+</html>
